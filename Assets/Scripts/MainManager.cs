@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class MainManager : MonoBehaviour
 {
@@ -25,7 +28,17 @@ public class MainManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        BestScoreText.text = m_BestScoreText;
+        if (DataPersistence.instance != null)
+        {
+            DataPersistence.instance.loadBestScore();
+            BestScoreText.text = DataPersistence.instance.bestScoreInfo.text;
+            m_BestScoreText = DataPersistence.instance.bestScoreInfo.text;
+            m_BestScore = DataPersistence.instance.bestScoreInfo.score;
+        }
+        else
+        {
+            BestScoreText.text = m_BestScoreText;
+        }
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
         
@@ -63,6 +76,18 @@ public class MainManager : MonoBehaviour
             {
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
+            else if (Input.GetKeyDown(KeyCode.Backspace))
+            {
+                SceneManager.LoadScene(0);
+            }
+            else if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                #if UNITY_EDITOR
+                EditorApplication.ExitPlaymode();
+                #else
+                Application.Quit();
+                #endif
+            }
         }
     }
 
@@ -78,6 +103,7 @@ public class MainManager : MonoBehaviour
         {
             m_BestScore = m_Points;
             m_BestScoreText = "Best Score: " + DataPersistence.instance.username + " : " + m_Points;
+            DataPersistence.instance.saveBestScore(m_BestScoreText, m_BestScore);
             BestScoreText.text = m_BestScoreText;
         }
         m_GameOver = true;
